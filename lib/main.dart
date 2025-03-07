@@ -6,7 +6,6 @@ import 'package:idea_app/app.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as path_provider;
-import 'package:path_provider/path_provider.dart';
 
 void main() async {
   // Flutterバインディングを初期化
@@ -15,19 +14,28 @@ void main() async {
   // 環境変数の読み込み
   await dotenv.load(fileName: '.env');
 
-  // アプリケーションのドキュメントディレクトリのパスを取得
-  final appDocDir = await getApplicationDocumentsDirectory();
-  final dbPath = path_provider.join(appDocDir.path, 'ideapad.db');
+  // データベースの保存場所をアプリケーション内の固定パスに設定
+  final String dbName = 'ideapad.db';
+  final String dbPath;
 
-  // データベースパスを環境変数に設定
-  dotenv.env['DB_PATH'] = dbPath;
-
-  // SQLite FFIの初期化
+  // SQLite FFIの初期化（プラットフォーム依存部分）
   if (Platform.isWindows || Platform.isLinux) {
     // Windows/Linuxの場合、FFIを使用
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    // カレントディレクトリの「data」フォルダに保存
+    final Directory appDir = Directory('data');
+    if (!appDir.existsSync()) {
+      appDir.createSync();
+    }
+    dbPath = path_provider.join(appDir.path, dbName);
+  } else {
+    // iOS/Android/macOSの場合、sqfliteのデフォルトパスを使用
+    dbPath = path_provider.join(await getDatabasesPath(), dbName);
   }
+
+  // データベースパスを環境変数に設定
+  dotenv.env['DB_PATH'] = dbPath;
 
   // 画面の向きを縦向きに固定
   await SystemChrome.setPreferredOrientations([
@@ -36,30 +44,28 @@ void main() async {
   ]);
 
   // データベースの準備
-  await _prepareDatabasePath();
+  await _prepareDatabasePath(dbPath);
 
   // アプリケーションを実行
   runApp(const App());
 }
 
 // データベースパスの準備
-Future<void> _prepareDatabasePath() async {
+Future<void> _prepareDatabasePath(String dbPath) async {
   try {
-    // データベースパスを取得
-    final dbPath = await getDatabasesPath();
-    final dbFilePath = path_provider.join(dbPath, 'idea_app.db');
+    // データベースディレクトリを作成
+    final dbDir = Directory(path_provider.dirname(dbPath));
+    if (!dbDir.existsSync()) {
+      await dbDir.create(recursive: true);
+    }
 
     // データベースが存在するかチェック
-    final exists = await databaseExists(dbFilePath);
+    final exists = await databaseExists(dbPath);
 
     if (!exists) {
-      // データベースが存在しない場合は、必要なディレクトリを作成
-      try {
-        await Directory(path_provider.dirname(dbFilePath))
-            .create(recursive: true);
-      } catch (_) {
-        // ディレクトリが既に存在する場合など、エラーを無視
-      }
+      debugPrint('新しいデータベースを作成します: $dbPath');
+    } else {
+      debugPrint('既存のデータベースを使用します: $dbPath');
     }
   } catch (e) {
     debugPrint('データベースパスの準備に失敗しました: $e');

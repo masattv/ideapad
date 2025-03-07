@@ -67,6 +67,7 @@ dependencies:
   json_annotation: ^4.8.1  # JSONシリアライズ
   flutter_simple_treeview: ^3.0.2
   path_provider: ^2.1.5
+  url_launcher: ^6.2.5  # URLリンク処理
 
 dev_dependencies:
   flutter_test:

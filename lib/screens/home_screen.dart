@@ -223,11 +223,6 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedIcon: Icon(Icons.shuffle_on),
             label: '組み合わせ',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'アカウント',
-          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(

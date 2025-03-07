@@ -1,14 +1,21 @@
 import 'dart:math';
 import '../models/idea.dart';
 import '../models/ai_combination.dart';
+import '../models/user_stats.dart';
 import 'open_ai_client.dart';
 import 'database_service.dart';
+import 'user_stats_service.dart';
 
 class AIIdeaCombinationService {
   final OpenAIClient _openAiClient;
   final DatabaseService _databaseService;
+  final UserStatsService _userStatsService;
 
-  AIIdeaCombinationService(this._openAiClient, this._databaseService);
+  AIIdeaCombinationService(
+    this._openAiClient,
+    this._databaseService,
+    this._userStatsService,
+  );
 
   // データベースからすべての組み合わせを取得
   Future<List<AICombination>> getCombinations() async {
@@ -18,6 +25,11 @@ class AIIdeaCombinationService {
       print('組み合わせの取得中にエラーが発生しました: $e');
       return [];
     }
+  }
+
+  // 現在のAI使用状況を取得
+  Future<UserStats> getUserStats() {
+    return _userStatsService.getUserStats();
   }
 
   // ランダムなアイデアのペアを選択するプライベートメソッド
@@ -60,6 +72,15 @@ class AIIdeaCombinationService {
   // 組み合わせを生成するメソッド
   Future<List<AICombination>> generateCombinations(int count) async {
     try {
+      // AI使用可能かどうかチェック
+      final userStats = await _userStatsService.getUserStats();
+      if (!userStats.canUseAI) {
+        throw Exception('今月のAI使用回数制限に達しました。SNSでシェアして追加の使用回数を獲得してください。');
+      }
+
+      // 生成可能な最大数を制限（残りの回数以上は生成しない）
+      final actualCount = min(count, userStats.remainingUsage);
+
       // すべてのアイデアを取得
       final ideas = await _databaseService.getAllIdeas();
 
@@ -68,12 +89,15 @@ class AIIdeaCombinationService {
       }
 
       // ランダムなアイデアのペアを選択
-      final ideaPairs = _selectIdeaPairs(ideas, count);
+      final ideaPairs = _selectIdeaPairs(ideas, actualCount);
       final combinations = <AICombination>[];
 
       // 各ペアに対して組み合わせを生成
       for (final pair in ideaPairs) {
         try {
+          // AI使用回数をインクリメント（各ペアごとに1回とカウント）
+          await _userStatsService.incrementAIUsage();
+
           // OpenAI APIを使用してアイデアを組み合わせる
           final result = await _openAiClient.generateIdeaCombination(
               pair[0].content, pair[1].content);
@@ -101,6 +125,11 @@ class AIIdeaCombinationService {
       print('組み合わせの生成プロセス中にエラーが発生しました: $e');
       rethrow;
     }
+  }
+
+  // SNSでシェアして追加使用回数を獲得
+  Future<UserStats> addShareBonus() async {
+    return await _userStatsService.addShareBonus();
   }
 
   // 生成された組み合わせをデータベースに保存
