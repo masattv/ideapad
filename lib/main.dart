@@ -20,22 +20,22 @@ void main() async {
 
   // SQLite FFIの初期化（プラットフォーム依存部分）
   if (Platform.isWindows || Platform.isLinux) {
-    // Windows/Linuxの場合、FFIを使用
+    // Windows/Linuxの場合、FFIを使用 （近藤Q windowsとlinuxのDB設定ファイルはここの2行だけででよいのでは？）
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
-    // カレントディレクトリの「data」フォルダに保存
-    final Directory appDir = Directory('data');
-    if (!appDir.existsSync()) {
-      appDir.createSync();
-    }
-    dbPath = path_provider.join(appDir.path, dbName);
+    // カレントディレクトリの「data」フォルダに保存 （近藤Q 以下に処理は不要に見える）
+    // final Directory appDir = Directory('data');
+    // if (!appDir.existsSync()) {
+    //   appDir.createSync();
+    // }
+    // dbPath = path_provider.join(appDir.path, dbName);
   } else {
     // iOS/Android/macOSの場合、sqfliteのデフォルトパスを使用
     dbPath = path_provider.join(await getDatabasesPath(), dbName);
   }
 
   // データベースパスを環境変数に設定
-  dotenv.env['DB_PATH'] = dbPath;
+  // dotenv.env['DB_PATH'] = dbPath;
 
   // 画面の向きを縦向きに固定
   await SystemChrome.setPreferredOrientations([
@@ -43,8 +43,8 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // データベースの準備
-  await _prepareDatabasePath(dbPath);
+  // データベースの準備（近藤Q ここのDB準備は不要に見える）
+  // await _prepareDatabasePath(dbPath);
 
   // アプリケーションを実行
   runApp(const App());
