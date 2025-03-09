@@ -22,7 +22,7 @@ class DatabaseService {
     return _database!;
   }
 
-  // データベースの初期化
+  // データベースの初期化 (近藤Q このあたりでDBファイルの設定をしていて個々の設定を使ってるからmainでのDB準備は重複しているように見える)
   Future<Database> _initDatabase() async {
     String path = await getDatabasesPath();
     String dbPath = join(path, 'ideapad.db');
@@ -30,7 +30,7 @@ class DatabaseService {
     return await openDatabase(
       dbPath,
       version: 1,
-      onCreate: (Database db, int version) async {
+      onCreate: (Database db, int version) async { // 近藤Q Migration001.migrate(db)でtableをCreateしてるが下記の_onCreate（）はいつ使うのか？
         await Migration001.migrate(db);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
