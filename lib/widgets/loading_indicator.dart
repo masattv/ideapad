@@ -1,48 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+/// アプリ全体で使用するローディングインジケーター
 class LoadingIndicator extends StatelessWidget {
-  final String? message;
-  final bool useShimmer;
+  final double size;
+  final Color? color;
 
   const LoadingIndicator({
     Key? key,
-    this.message,
-    this.useShimmer = false,
+    this.size = 40.0,
+    this.color,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final indicatorColor = color ?? theme.colorScheme.primary;
+    final isDarkMode = theme.brightness == Brightness.dark;
 
-    final content = Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        CircularProgressIndicator(
-          color: colorScheme.primary,
-        ),
-        if (message != null) ...[
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // シマーエフェクト付きインジケーター
+          Shimmer.fromColors(
+            baseColor: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+            highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+            period: const Duration(milliseconds: 1500),
+            child: SizedBox(
+              width: size,
+              height: size,
+              child: CircularProgressIndicator(
+                strokeWidth: 4.0,
+                valueColor: AlwaysStoppedAnimation<Color>(indicatorColor),
+              ),
+            ),
+          ),
+
           const SizedBox(height: 16),
+
+          // ローディングテキスト
           Text(
-            message!,
-            style: Theme.of(context).textTheme.bodyLarge,
-            textAlign: TextAlign.center,
+            '読み込み中...',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+            ),
           ),
         ],
-      ],
+      ),
     );
-
-    if (useShimmer) {
-      return Center(
-        child: Shimmer.fromColors(
-          baseColor: colorScheme.surfaceVariant,
-          highlightColor: colorScheme.surface,
-          child: content,
-        ),
-      );
-    }
-
-    return Center(child: content);
   }
 }
 

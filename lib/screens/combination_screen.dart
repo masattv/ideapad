@@ -241,7 +241,7 @@ class _CombinationScreenState extends State<CombinationScreen>
           _buildUsageInfo(),
           Expanded(
             child: _isGenerating
-                ? const LoadingIndicator(message: '新しいアイデアの組み合わせを生成中...')
+                ? const LoadingIndicator()
                 : TabBarView(
                     controller: _tabController,
                     children: [
@@ -274,7 +274,7 @@ class _CombinationScreenState extends State<CombinationScreen>
       future: _combinationsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const LoadingIndicator(message: '組み合わせを読み込み中...');
+          return const LoadingIndicator();
         }
 
         if (snapshot.hasError) {

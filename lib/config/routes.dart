@@ -2,16 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:idea_app/screens/home_screen.dart';
 import 'package:idea_app/screens/combination_screen.dart';
 import 'package:idea_app/screens/idea_editor_screen.dart';
+import 'package:idea_app/screens/onboarding_screen.dart';
+import 'package:idea_app/screens/other_screen.dart';
 import 'package:idea_app/models/idea.dart';
 
 class AppRoutes {
   static const String home = '/';
   static const String combinations = '/combinations';
   static const String ideaEditor = '/idea/editor';
+  static const String onboarding = '/onboarding';
+  static const String other = '/other';
 
   static Map<String, WidgetBuilder> get routes => {
         home: (context) => const HomeScreen(),
         combinations: (context) => const CombinationScreen(),
+        onboarding: (context) => const OnboardingScreen(),
+        other: (context) => const OtherScreen(),
         ideaEditor: (context) {
           final args = ModalRoute.of(context)!.settings.arguments
               as Map<String, dynamic>?;
@@ -29,6 +35,10 @@ class AppRoutes {
         return _buildRoute(const HomeScreen(), settings);
       case combinations:
         return _buildRoute(const CombinationScreen(), settings);
+      case onboarding:
+        return _buildRoute(const OnboardingScreen(), settings);
+      case other:
+        return _buildRoute(const OtherScreen(), settings);
       case ideaEditor:
         final args = settings.arguments as Map<String, dynamic>?;
         return _buildRoute(

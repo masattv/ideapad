@@ -182,6 +182,8 @@ class _IdeaEditorScreenState extends State<IdeaEditorScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditMode ? 'アイデアを編集' : 'アイデアを追加'),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         actions: [
           TextButton.icon(
             onPressed: _isProcessing ? null : _saveIdea,
@@ -194,10 +196,14 @@ class _IdeaEditorScreenState extends State<IdeaEditorScreen> {
                       color: colorScheme.onPrimary,
                     ),
                   )
-                : const Icon(Icons.save),
-            label: Text(_isProcessing ? '保存中...' : '保存'),
+                : Icon(Icons.save, color: colorScheme.onPrimary),
+            label: Text(
+              _isProcessing ? '保存中...' : '保存',
+              style: TextStyle(color: colorScheme.onPrimary),
+            ),
             style: TextButton.styleFrom(
               foregroundColor: colorScheme.onPrimary,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
             ),
           ),
         ],

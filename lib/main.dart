@@ -1,67 +1,70 @@
-import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:idea_app/app.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:path/path.dart' as path_provider;
+// 必要なパッケージのインポート
+import 'dart:io'; // ファイル操作やプラットフォーム情報を扱うためのパッケージ
+import 'package:flutter/material.dart'; // Flutterの基本的なウィジェットやマテリアルデザインを提供
+import 'package:flutter/services.dart'; // プラットフォームとの連携機能を提供
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // 環境変数を管理するためのパッケージ
+import 'package:idea_app/app.dart'; // アプリケーションのメインウィジェット
+import 'package:sqflite/sqflite.dart'; // SQLiteデータベース操作用パッケージ
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // デスクトップ向けSQLite実装
+import 'package:path/path.dart' as path_provider; // ファイルパス操作用パッケージ
 
+// アプリケーションのエントリーポイント
 void main() async {
-  // Flutterバインディングを初期化
+  // Flutterのウィジェットバインディングを初期化（プラグインを使用する前に必要）
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 環境変数の読み込み
+  // .envファイルから環境変数を読み込み（APIキーなどの設定を外部ファイルで管理）
   await dotenv.load(fileName: '.env');
 
-  // データベースの保存場所をアプリケーション内の固定パスに設定
+  // データベースファイルの名前と保存パスを設定
   final String dbName = 'ideapad.db';
   final String dbPath;
 
-  // SQLite FFIの初期化（プラットフォーム依存部分）
+  // プラットフォームに応じたデータベース設定
   if (Platform.isWindows || Platform.isLinux) {
-    // Windows/Linuxの場合、FFIを使用
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-    // カレントディレクトリの「data」フォルダに保存
+    // Windows/Linux向けの設定
+    sqfliteFfiInit(); // SQLite FFIを初期化
+    databaseFactory = databaseFactoryFfi; // データベースファクトリをFFI用に設定
+    // dataフォルダにDBを保存
     final Directory appDir = Directory('data');
     if (!appDir.existsSync()) {
-      appDir.createSync();
+      appDir.createSync(); // フォルダが存在しない場合は作成
     }
     dbPath = path_provider.join(appDir.path, dbName);
   } else {
-    // iOS/Android/macOSの場合、sqfliteのデフォルトパスを使用
+    // iOS/Android/macOS向けの設定（プラットフォーム標準のDBパスを使用）
     dbPath = path_provider.join(await getDatabasesPath(), dbName);
   }
 
-  // データベースパスを環境変数に設定
+  // データベースパスを環境変数として設定（アプリ全体で使用可能に）
   dotenv.env['DB_PATH'] = dbPath;
 
-  // 画面の向きを縦向きに固定
+  // アプリの画面方向を縦向きに固定
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // データベースの準備
+  // データベースの保存場所を準備
   await _prepareDatabasePath(dbPath);
 
-  // アプリケーションを実行
+  // アプリケーションを起動（app.dartで定義されたAppウィジェットをルートとして使用）
   runApp(const App());
 }
 
-// データベースパスの準備
+// データベースの保存場所を準備するヘルパー関数
 Future<void> _prepareDatabasePath(String dbPath) async {
   try {
-    // データベースディレクトリを作成
+    // データベース用ディレクトリを作成
     final dbDir = Directory(path_provider.dirname(dbPath));
     if (!dbDir.existsSync()) {
-      await dbDir.create(recursive: true);
+      await dbDir.create(recursive: true); // 必要な親ディレクトリも含めて作成
     }
 
-    // データベースが存在するかチェック
+    // データベースファイルの存在確認
     final exists = await databaseExists(dbPath);
 
+    // デバッグ情報の出力
     if (!exists) {
       debugPrint('新しいデータベースを作成します: $dbPath');
     } else {
@@ -69,126 +72,83 @@ Future<void> _prepareDatabasePath(String dbPath) async {
     }
   } catch (e) {
     debugPrint('データベースパスの準備に失敗しました: $e');
-    // エラーが発生しても続行（アプリ起動時にデータベースサービスが再試行する）
+    // エラーが発生しても処理を継続（DatabaseServiceで再試行される）
   }
 }
 
+// デモアプリのルートウィジェット（Flutterプロジェクト作成時の自動生成コード）
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
+        // アプリケーションのテーマ設定
+        // seedColorから自動的に調和の取れた配色を生成
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        useMaterial3: true, // Material Design 3を有効化
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
+// デモ用のホーム画面ウィジェット
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  final String title; // アプリバーに表示するタイトル
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+// MyHomePageの状態を管理するクラス
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int _counter = 0; // カウンター値を保持する状態変数
 
+  // カウンターをインクリメントするメソッド
   void _incrementCounter() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
+      // setStateを呼ぶことで、Flutterフレームワークに状態の変更を通知
+      // これにより、buildメソッドが再実行され、UI が更新される
       _counter++;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    // UIレイアウトを構築するメソッド
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
+        // アプリケーションバーの背景色をテーマに基づいて設定
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
+          // 子ウィジェットを垂直方向に配置
+          mainAxisAlignment: MainAxisAlignment.center, // 中央揃えに設定
           children: <Widget>[
             const Text(
               'You have pushed the button this many times:',
             ),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              '$_counter', // カウンター値を表示
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineMedium, // テーマに基づいたテキストスタイル
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _incrementCounter, // ボタンタップ時にカウンターを増加
         tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        child: const Icon(Icons.add), // プラスアイコンを表示
+      ),
     );
   }
 }

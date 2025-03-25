@@ -3,11 +3,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:idea_app/config/routes.dart';
 import 'package:idea_app/config/themes.dart';
 import 'package:idea_app/screens/home_screen.dart';
+import 'package:idea_app/screens/onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:idea_app/services/database_service.dart';
 import 'package:idea_app/services/open_ai_client.dart';
 import 'package:idea_app/services/ai_idea_combination_service.dart';
 import 'package:idea_app/services/user_stats_service.dart';
+import 'package:idea_app/services/theme_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class App extends StatelessWidget {
   const App({Key? key}) : super(key: key);
@@ -22,70 +25,148 @@ class App extends StatelessWidget {
         Provider<OpenAIClient>(
           create: (_) => OpenAIClient.fromEnv(),
         ),
-        ProxyProvider<DatabaseService, Future<UserStatsService>>(
-          update: (_, databaseService, __) async {
-            // データベースが初期化された後にUserStatsServiceを作成
+        Provider<Future<UserStatsService>>(
+          create: (context) async {
+            debugPrint('Initializing UserStatsService...');
+            final databaseService = context.read<DatabaseService>();
             final db = await databaseService.database;
-            return UserStatsService.getInstance(db);
-          },
-          dispose: (_, future) async {
-            // 何もしない（シングルトンのため）
+            final service = await UserStatsService.getInstance(db);
+            debugPrint('UserStatsService initialized');
+            return service;
           },
         ),
-        ProxyProvider3<DatabaseService, OpenAIClient, Future<UserStatsService>,
-            Future<AIIdeaCombinationService>>(
-          update:
-              (_, databaseService, openAIClient, userStatsFuture, __) async {
-            final userStatsService = await userStatsFuture;
-            return AIIdeaCombinationService(
+        Provider<Future<AIIdeaCombinationService>>(
+          create: (context) async {
+            debugPrint('Initializing AIIdeaCombinationService...');
+            final databaseService = context.read<DatabaseService>();
+            final openAIClient = context.read<OpenAIClient>();
+            final userStatsService =
+                await context.read<Future<UserStatsService>>();
+            final service = AIIdeaCombinationService(
               openAIClient,
               databaseService,
               userStatsService,
             );
+            debugPrint('AIIdeaCombinationService initialized');
+            return service;
           },
-          dispose: (_, future) async {
-            // 何もしない
-          },
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ThemeService(),
         ),
       ],
-      child: MaterialApp(
-        title: 'アイデアパッド',
-        theme: AppThemes.lightTheme(),
-        darkTheme: AppThemes.darkTheme(),
-        themeMode: ThemeMode.system, // システム設定に従う
-        debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.home,
-        onGenerateRoute: AppRoutes.generateRoute,
-        home: FutureBuilder<void>(
-          // アプリが起動する前にサービスが初期化されるのを待つ
-          future: _initializeServices(context),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return const HomeScreen();
-            }
-            // ローディング表示
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          },
-        ),
+      child: Consumer<ThemeService>(
+        builder: (context, themeService, _) {
+          return FutureBuilder<String>(
+            future: _getInitialRoute(),
+            builder: (context, snapshot) {
+              debugPrint('FutureBuilder state: ${snapshot.connectionState}');
+              debugPrint('FutureBuilder error: ${snapshot.error}');
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return MaterialApp(
+                  home: Scaffold(
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('アプリを準備中...'),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return MaterialApp(
+                  home: Scaffold(
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline,
+                              size: 48, color: Colors.red),
+                          const SizedBox(height: 16),
+                          const Text('アプリの起動中にエラーが発生しました'),
+                          const SizedBox(height: 8),
+                          Text(snapshot.error.toString(),
+                              style: const TextStyle(fontSize: 12)),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const App()),
+                              );
+                            },
+                            child: const Text('再試行'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return MaterialApp(
+                title: 'アイデアパッド',
+                theme: AppThemes.lightTheme(),
+                darkTheme: AppThemes.darkTheme(),
+                themeMode: themeService.themeMode,
+                debugShowCheckedModeBanner: false,
+                navigatorKey: App.navigatorKey,
+                onGenerateRoute: AppRoutes.generateRoute,
+                initialRoute: snapshot.data ?? AppRoutes.onboarding,
+              );
+            },
+          );
+        },
       ),
     );
   }
 
-  // サービスを初期化するためのヘルパーメソッド
-  Future<void> _initializeServices(BuildContext context) async {
-    // DatabaseServiceを初期化
-    final databaseService =
-        Provider.of<DatabaseService>(context, listen: false);
-    await databaseService.database;
+  Future<String> _getInitialRoute() async {
+    try {
+      debugPrint('Getting initial route...');
 
-    // UserStatsServiceを初期化
-    await Provider.of<Future<UserStatsService>>(context, listen: false);
+      // サービスの初期化を待つ
+      debugPrint('Waiting for services to initialize...');
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        final userStatsFuture = context.read<Future<UserStatsService>>();
+        final aiServiceFuture =
+            context.read<Future<AIIdeaCombinationService>>();
+        await Future.wait([userStatsFuture, aiServiceFuture]);
+        debugPrint('Services initialized successfully');
+      }
 
-    // AIIdeaCombinationServiceを初期化
-    await Provider.of<Future<AIIdeaCombinationService>>(context, listen: false);
+      final isFirstLaunch = await _checkFirstLaunch();
+      debugPrint('Is first launch: $isFirstLaunch');
+      final route = isFirstLaunch ? AppRoutes.onboarding : AppRoutes.home;
+      debugPrint('Selected route: $route');
+      return route;
+    } catch (e) {
+      debugPrint('Error getting initial route: $e');
+      return AppRoutes.onboarding;
+    }
   }
+
+  Future<bool> _checkFirstLaunch() async {
+    try {
+      debugPrint('Checking first launch...');
+      final prefs = await SharedPreferences.getInstance();
+      final bool isFirstLaunch = !prefs.containsKey('onboarding_completed');
+      debugPrint('First launch check result: $isFirstLaunch');
+      return isFirstLaunch;
+    } catch (e) {
+      debugPrint('Error checking first launch: $e');
+      return true;
+    }
+  }
+
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 }
