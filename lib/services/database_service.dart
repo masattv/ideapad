@@ -136,16 +136,26 @@ class DatabaseService {
   Future<void> _upgradeV3ToV4(Transaction txn) async {
     debugPrint('V3 → V4: is_deletedカラムを追加');
 
-    // is_deletedカラムを追加
-    await txn.execute('''
-      ALTER TABLE ideas 
-      ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0
-    ''');
+    try {
+      // is_deletedカラムを追加
+      await txn.execute('''
+        ALTER TABLE ideas 
+        ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0
+      ''');
+    } catch (e) {
+      debugPrint('is_deletedカラムは既に存在します: $e');
+      // カラムが既に存在する場合は無視
+    }
 
-    // インデックスを作成
-    await txn.execute(
-      'CREATE INDEX IF NOT EXISTS idx_ideas_is_deleted ON ideas (is_deleted)',
-    );
+    try {
+      // インデックスを作成（IF NOT EXISTSがあるので安全）
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_ideas_is_deleted ON ideas (is_deleted)',
+      );
+    } catch (e) {
+      debugPrint('インデックス作成エラー: $e');
+      rethrow;
+    }
   }
 
   Future<void> _upgradeV1ToV2(Transaction txn) async {
@@ -162,17 +172,21 @@ class DatabaseService {
       )
     ''');
 
-    // 初期ユーザー統計データ挿入
-    final now = DateTime.now().toIso8601String();
-    await txn.insert('user_stats', {
-      'id': 1,
-      'ai_usage_count': 0,
-      'ai_usage_bonus': 0,
-      'share_count': 0,
-      'last_reset_date': now,
-      'created_at': now,
-      'updated_at': now,
-    });
+    // user_statsテーブルに既存のデータがあるか確認
+    final existingStats = await txn.query('user_stats', where: 'id = 1');
+    if (existingStats.isEmpty) {
+      // 初期ユーザー統計データ挿入
+      final now = DateTime.now().toIso8601String();
+      await txn.insert('user_stats', {
+        'id': 1,
+        'ai_usage_count': 0,
+        'ai_usage_bonus': 0,
+        'share_count': 0,
+        'last_reset_date': now,
+        'created_at': now,
+        'updated_at': now,
+      });
+    }
   }
 
   Future<void> _upgradeV2ToV3(Transaction txn) async {
@@ -207,17 +221,6 @@ class DatabaseService {
   Future<void> _insertInitialData(Transaction txn) async {
     final now = DateTime.now().toIso8601String();
 
-    // 初期ユーザー統計データ
-    await txn.insert('user_stats', {
-      'id': 1,
-      'ai_usage_count': 0,
-      'ai_usage_bonus': 0,
-      'share_count': 0,
-      'last_reset_date': now,
-      'created_at': now,
-      'updated_at': now,
-    });
-
     // 初期カテゴリを追加
     final initialCategories = [
       'ビジネス',
@@ -233,6 +236,21 @@ class DatabaseService {
         'created_at': now,
       });
     }
+
+    // user_statsテーブルに既存のデータがあるか確認
+    final existingStats = await txn.query('user_stats', where: 'id = 1');
+    if (existingStats.isEmpty) {
+      // 初期ユーザー統計データ
+      await txn.insert('user_stats', {
+        'id': 1,
+        'ai_usage_count': 0,
+        'ai_usage_bonus': 0,
+        'share_count': 0,
+        'last_reset_date': now,
+        'created_at': now,
+        'updated_at': now,
+      });
+    }
   }
 
   // アイデア関連の操作 ------------------------
@@ -240,7 +258,14 @@ class DatabaseService {
   // アイデアの追加
   Future<int> insertIdea(Idea idea) async {
     final db = await database;
-    return await db.insert('ideas', idea.toMap());
+    final map = idea.toMap();
+    debugPrint('アイデアを追加: $map');
+    try {
+      return await db.insert('ideas', map);
+    } catch (e) {
+      debugPrint('アイデア追加エラー: $e');
+      rethrow;
+    }
   }
 
   // アイデアの取得（全件、削除されていないもののみ）
