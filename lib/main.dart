@@ -4,9 +4,9 @@ import 'package:flutter/material.dart'; // Flutterの基本的なウィジェッ
 import 'package:flutter/services.dart'; // プラットフォームとの連携機能を提供
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // 環境変数を管理するためのパッケージ
 import 'package:idea_app/app.dart'; // アプリケーションのメインウィジェット
-import 'package:sqflite/sqflite.dart'; // SQLiteデータベース操作用パッケージ
+// import 'package:sqflite/sqflite.dart'; // SQLiteデータベース操作用パッケージ  // 未使用のためコメントアウト(2025/03/28)
 import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // デスクトップ向けSQLite実装
-import 'package:path/path.dart' as path_provider; // ファイルパス操作用パッケージ
+// import 'package:path/path.dart' as path_provider; // ファイルパス操作用パッケージ  // 未使用のためコメントアウト(2025/03/28)
 
 // アプリケーションのエントリーポイント
 void main() async {
@@ -17,8 +17,8 @@ void main() async {
   await dotenv.load(fileName: '.env');
 
   // データベースファイルの名前と保存パスを設定
-  final String dbName = 'ideapad.db';
-  final String dbPath;
+  // const String dbName = 'ideapad.db'; // 未使用のためコメントアウト(2025/03/28)
+  // final String dbPath; // 未使用のためコメントアウト(2025/03/28)
 
   // プラットフォームに応じたデータベース設定
   if (Platform.isWindows || Platform.isLinux) {
@@ -33,7 +33,7 @@ void main() async {
     // dbPath = path_provider.join(appDir.path, dbName);
   } else {
     // iOS/Android/macOS向けの設定（プラットフォーム標準のDBパスを使用）
-    dbPath = path_provider.join(await getDatabasesPath(), dbName);
+    // dbPath = path_provider.join(await getDatabasesPath(), dbName);  // 未使用のためコメントアウト(2025/03/28)
   }
 
   // データベースパスを環境変数に設定
@@ -53,28 +53,29 @@ void main() async {
 }
 
 // データベースの保存場所を準備するヘルパー関数
-Future<void> _prepareDatabasePath(String dbPath) async {
-  try {
-    // データベース用ディレクトリを作成
-    final dbDir = Directory(path_provider.dirname(dbPath));
-    if (!dbDir.existsSync()) {
-      await dbDir.create(recursive: true); // 必要な親ディレクトリも含めて作成
-    }
+// 未使用のためコメントアウト(2025/03/28)
+// Future<void> _prepareDatabasePath(String dbPath) async {
+//   try {
+//     // データベース用ディレクトリを作成
+//     final dbDir = Directory(path_provider.dirname(dbPath));
+//     if (!dbDir.existsSync()) {
+//       await dbDir.create(recursive: true); // 必要な親ディレクトリも含めて作成
+//     }
 
-    // データベースファイルの存在確認
-    final exists = await databaseExists(dbPath);
+//     // データベースファイルの存在確認
+//     final exists = await databaseExists(dbPath);
 
-    // デバッグ情報の出力
-    if (!exists) {
-      debugPrint('新しいデータベースを作成します: $dbPath');
-    } else {
-      debugPrint('既存のデータベースを使用します: $dbPath');
-    }
-  } catch (e) {
-    debugPrint('データベースパスの準備に失敗しました: $e');
-    // エラーが発生しても処理を継続（DatabaseServiceで再試行される）
-  }
-}
+//     // デバッグ情報の出力
+//     if (!exists) {
+//       debugPrint('新しいデータベースを作成します: $dbPath');
+//     } else {
+//       debugPrint('既存のデータベースを使用します: $dbPath');
+//     }
+//   } catch (e) {
+//     debugPrint('データベースパスの準備に失敗しました: $e');
+//     // エラーが発生しても処理を継続（DatabaseServiceで再試行される）
+//   }
+// }
 
 // デモアプリのルートウィジェット（Flutterプロジェクト作成時の自動生成コード）
 class MyApp extends StatelessWidget {

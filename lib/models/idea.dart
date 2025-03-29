@@ -12,6 +12,7 @@ class Idea {
   // JSONエンコード用のタグゲッター
   String get tagsJson => jsonEncode(tags);
 
+  // thisは不要なため削除（Dartでは、コンストラクタのパラメータ名とフィールド名が同じ場合、thisは省略可能）
   Idea({
     this.id,
     required this.content,
@@ -20,9 +21,9 @@ class Idea {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.isDeleted = false,
-  })  : this.tags = tags ?? [],
-        this.createdAt = createdAt ?? DateTime.now(),
-        this.updatedAt = updatedAt ?? DateTime.now();
+  })  : tags = tags ?? [],
+        createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? DateTime.now();
 
   // 新しいインスタンスを作成するためのファクトリーメソッド
   factory Idea.create({

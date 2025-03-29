@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+// import 'package:lottie/lottie.dart'; // 未使用のためコメントアウト(2025/03/28)
 
 class EmptyState extends StatelessWidget {
   final String title;

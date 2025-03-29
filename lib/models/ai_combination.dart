@@ -18,6 +18,16 @@ class AICombination {
   Idea? get ideaB => _ideaB;
   String get generatedIdea => combinedContent;
 
+  // AICombinationクラスのコンストラクタ
+  // パラメータ:
+  // - id: 組み合わせの一意のID (オプション)
+  // - ideaIds: 組み合わせに使用されたアイデアのIDリスト (必須)
+  // - combinedContent: AIによって生成された組み合わせ内容 (必須)
+  // - reasoning: AIの推論プロセスの説明 (オプション)
+  // - createdAt: 作成日時 (オプション、指定がない場合は現在時刻)
+  // - isFavorite: お気に入り状態 (デフォルトはfalse)
+  // - ideaA: 1つ目の元となるアイデア (オプション)
+  // - ideaB: 2つ目の元となるアイデア (オプション)
   AICombination({
     this.id,
     required this.ideaIds,
@@ -27,9 +37,9 @@ class AICombination {
     this.isFavorite = false,
     Idea? ideaA,
     Idea? ideaB,
-  })  : this.createdAt = createdAt ?? DateTime.now(),
-        this._ideaA = ideaA,
-        this._ideaB = ideaB;
+  })  : createdAt = createdAt ?? DateTime.now(), // createdAtが指定されていない場合は現在時刻を設定
+        _ideaA = ideaA, // プライベートフィールドに元のアイデアを保存
+        _ideaB = ideaB; // プライベートフィールドに元のアイデアを保存
 
   // 既存の組み合わせを更新するためのメソッド
   AICombination copyWith({
@@ -49,8 +59,8 @@ class AICombination {
       reasoning: reasoning ?? this.reasoning,
       createdAt: createdAt ?? this.createdAt,
       isFavorite: isFavorite ?? this.isFavorite,
-      ideaA: ideaA ?? this._ideaA,
-      ideaB: ideaB ?? this._ideaB,
+      ideaA: ideaA ?? _ideaA,
+      ideaB: ideaB ?? _ideaB,
     );
   }
 
@@ -102,8 +112,8 @@ class AICombination {
       'reasoning': reasoning,
       'created_at': createdAt.toIso8601String(),
       'is_favorite': isFavorite ? 1 : 0,
-      'idea_a': _ideaA != null ? jsonEncode(_ideaA!.toMap()) : null,
-      'idea_b': _ideaB != null ? jsonEncode(_ideaB!.toMap()) : null,
+      'idea_a': _ideaA != null ? jsonEncode(_ideaA.toMap()) : null,
+      'idea_b': _ideaB != null ? jsonEncode(_ideaB.toMap()) : null,
     };
   }
 

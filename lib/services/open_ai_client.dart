@@ -65,8 +65,7 @@ JSONの配列形式で返してください。
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $_apiKey',
-            if (_organizationId != null)
-              'OpenAI-Organization': _organizationId!,
+            if (_organizationId != null) 'OpenAI-Organization': _organizationId,
           },
           body: jsonEncode({
             'model': 'gpt-4-turbo-preview',

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+// import 'package:flutter_dotenv/flutter_dotenv.dart'; // 未使用のためコメントアウト(2025/03/28)
 import 'package:idea_app/config/routes.dart';
 import 'package:idea_app/config/themes.dart';
-import 'package:idea_app/screens/home_screen.dart';
-import 'package:idea_app/screens/onboarding_screen.dart';
+// import 'package:idea_app/screens/home_screen.dart'; // 未使用のためコメントアウト(2025/03/28)
+// import 'package:idea_app/screens/onboarding_screen.dart'; // 未使用のためコメントアウト(2025/03/28)
 import 'package:provider/provider.dart';
 import 'package:idea_app/services/database_service.dart';
 import 'package:idea_app/services/open_ai_client.dart';
@@ -64,12 +64,12 @@ class App extends StatelessWidget {
               debugPrint('FutureBuilder error: ${snapshot.error}');
 
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return MaterialApp(
+                return const MaterialApp(
                   home: Scaffold(
                     body: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           CircularProgressIndicator(),
                           SizedBox(height: 16),
                           Text('アプリを準備中...'),

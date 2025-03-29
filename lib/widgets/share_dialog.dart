@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart'; // Flutterの基本的なウィジェットを使用するためのパッケージ
 import 'package:provider/provider.dart'; // 状態管理のためのパッケージ
 import 'package:url_launcher/url_launcher.dart'; // URLを開くためのパッケージ
-import '../services/ai_idea_combination_service.dart'; // AIアイデア組み合わせサービスを使用
+// import '../services/ai_idea_combination_service.dart'; // AIアイデア組み合わせサービスを使用 //
 import '../models/user_stats.dart'; // ユーザー統計情報モデルを使用
 import 'package:idea_app/services/user_stats_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';

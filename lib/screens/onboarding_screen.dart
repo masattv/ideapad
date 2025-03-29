@@ -1,7 +1,7 @@
 // 必要なパッケージをインポート
 import 'package:flutter/material.dart'; // Flutterの基本的なウィジェットを使用するためのパッケージ
 import 'package:shared_preferences/shared_preferences.dart'; // データの永続化を行うためのパッケージ
-import 'package:idea_app/config/themes.dart'; // アプリのテーマ設定を管理するファイル
+// import 'package:idea_app/config/themes.dart'; // アプリのテーマ設定を管理するファイル // 未使用のためコメントアウト(2025/03/28)
 import 'package:idea_app/config/routes.dart'; // アプリの画面遷移を管理するファイル
 import 'package:flutter_animate/flutter_animate.dart'; // アニメーション効果を追加するためのパッケージ
 

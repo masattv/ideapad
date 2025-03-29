@@ -1,0 +1,28 @@
+@startuml Database Sequence
+
+actor user
+participant "DatabaseService" as DB
+participant "Idea" as Model
+database "SQLite" as SQL
+
+== データベース初期化 ==
+user -> DB : get database
+activate DB
+DB -> SQL : openDatabase()
+DB -> SQL : _onCreate() or _onUpgrade()
+SQL --> DB : Databaseが用意されてreturn
+deactivate DB
+
+== アイデア一覧取得 ==
+UI -> DB : getAllIdeas()
+activate DB
+DB -> SQL : SELECT * FROM ideas\nWHERE is_deleted = 0
+SQL --> DB : List<Map>
+loop for each row
+    DB -> Model : fromMap(row)
+    Model --> DB : Idea instance
+end
+DB --> UI : List<Idea>
+deactivate DB
+
+@enduml

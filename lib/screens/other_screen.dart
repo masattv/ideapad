@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:idea_app/config/themes.dart';
+// import 'package:idea_app/config/themes.dart'; // 未使用のためコメントアウト(2025/03/28)
 import 'package:idea_app/services/database_service.dart';
 import 'package:idea_app/services/theme_service.dart';
 import 'package:idea_app/widgets/app_header.dart';

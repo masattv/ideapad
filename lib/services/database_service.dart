@@ -1,10 +1,10 @@
-import 'dart:convert';
+// import 'dart:convert'; // 未使用のためコメントアウト(2025/03/28)
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:idea_app/models/idea.dart';
 import 'package:idea_app/models/idea_combination.dart';
 import 'package:idea_app/models/ai_combination.dart';
-import '../database_migrations/migration_001.dart';
+// import '../database_migrations/migration_001.dart'; // 未使用のためコメントアウト(2025/03/28)
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -38,8 +38,8 @@ class DatabaseService {
       return await openDatabase(
         dbPath,
         version: 4,
-        onCreate: _onCreate,
-        onUpgrade: _onUpgrade,
+        onCreate: _onCreate, // DBがなかった場合、onCreateを実行
+        onUpgrade: _onUpgrade, // DBが存在していて、バージョンが違う場合、onUpgradeを実行
       );
     } catch (e) {
       debugPrint('データベース初期化エラー: $e');
